@@ -9,6 +9,7 @@ import os
 import sys
 import subprocess
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
 
@@ -137,8 +138,93 @@ class MainAgentController:
             print(f"❌ Quiz TTS Agent 실행 중 오류: {e}")
             return False
     
+    def run_quiz_only(self, pdf_path: str) -> bool:
+        """퀴즈만 생성합니다 (TTS 없음)."""
+        print(f"\n🎓 퀴즈만 생성 시작")
+        print("=" * 60)
+        print(f"📄 분석할 PDF: {os.path.basename(pdf_path)}")
+        
+        try:
+            # PDF 로드 및 벡터스토어 구축
+            docs = self.quiz_system.load_pdf(pdf_path)
+            vectorstore = self.quiz_system.build_vectorstore(docs)
+            
+            # 요약 생성
+            print("\n📖 1차 에이전트: 한국어 요약")
+            print("-" * 50)
+            summary = self.quiz_system.generate_summary(vectorstore)
+            print(summary)
+            
+            # 퀴즈 생성
+            print("\n🎓 2차 에이전트: 퀴즈 생성")
+            print("-" * 50)
+            quiz = self.quiz_system.generate_quiz(vectorstore)
+            print(quiz)
+            
+            # 파일 저장
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            with open(f"summary_{timestamp}.txt", "w", encoding="utf-8") as f:
+                f.write(summary)
+            with open(f"quiz_{timestamp}.txt", "w", encoding="utf-8") as f:
+                f.write(quiz)
+            
+            print(f"\n✅ 퀴즈 생성 완료!")
+            print(f"📁 결과 저장: summary_{timestamp}.txt, quiz_{timestamp}.txt")
+            return True
+            
+        except Exception as e:
+            print(f"❌ 퀴즈 생성 중 오류: {e}")
+            return False
+    
+    def run_tts_only(self, pdf_path: str) -> bool:
+        """TTS 팟캐스트만 제작합니다 (퀴즈 없음)."""
+        print(f"\n🎧 TTS 팟캐스트 제작 시작")
+        print("=" * 60)
+        print(f"📄 분석할 PDF: {os.path.basename(pdf_path)}")
+        
+        try:
+            # PDF 로드 및 벡터스토어 구축
+            docs = self.quiz_system.load_pdf(pdf_path)
+            vectorstore = self.quiz_system.build_vectorstore(docs)
+            
+            # 요약 생성
+            print("\n📖 1차 에이전트: 한국어 요약")
+            print("-" * 50)
+            summary = self.quiz_system.generate_summary(vectorstore)
+            print(summary)
+            
+            # 산업 해설 생성
+            print("\n💡 2차 에이전트: 산업 적용 해설 생성")
+            print("-" * 50)
+            explainer = self.quiz_system.generate_industry_explainer(vectorstore)
+            print(explainer)
+            
+            # 파일 저장
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            with open(f"summary_{timestamp}.txt", "w", encoding="utf-8") as f:
+                f.write(summary)
+            with open(f"explainer_{timestamp}.txt", "w", encoding="utf-8") as f:
+                f.write(explainer)
+            
+            # TTS 팟캐스트 생성
+            print("\n🎧 3차 에이전트: TTS 팟캐스트 생성")
+            print("-" * 50)
+            success = self.quiz_system.export_podcast(explainer, f"industry_explainer_{timestamp}.mp3")
+            
+            if success:
+                print(f"\n✅ TTS 팟캐스트 제작 완료!")
+                print(f"📁 결과 저장: summary_{timestamp}.txt, explainer_{timestamp}.txt, industry_explainer_{timestamp}.mp3")
+                return True
+            else:
+                print("\n❌ TTS 팟캐스트 제작 실패!")
+                return False
+            
+        except Exception as e:
+            print(f"❌ TTS 팟캐스트 제작 중 오류: {e}")
+            return False
+    
     def run_automatic_workflow(self) -> bool:
-        """논문 검색부터 퀴즈 생성까지 자동으로 실행합니다."""
+        """논문 검색부터 선택된 작업까지 자동으로 실행합니다."""
         print("\n🚀 자동 워크플로우 시작")
         print("=" * 60)
         
@@ -150,19 +236,92 @@ class MainAgentController:
         print("\n⏳ 잠시 대기 중...")
         time.sleep(2)
         
-        # 2단계: 가장 최근 다운로드된 PDF로 퀴즈 생성
+        # 2단계: 다운로드 후 작업 선택
         latest_pdf = self.get_latest_pdf()
         if not latest_pdf:
             print("❌ 다운로드된 PDF 파일을 찾을 수 없습니다.")
             return False
         
-        print(f"\n📄 최근 다운로드된 PDF를 자동 선택: {os.path.basename(latest_pdf)}")
+        print(f"\n📄 다운로드 완료: {os.path.basename(latest_pdf)}")
+        print("\n다음 작업을 선택하세요 (여러 개 선택 가능):")
+        print("1. 퀴즈 생성")
+        print("2. TTS 팟캐스트 제작")
+        print("3. 작업하지 않음")
         
-        if not self.run_quiz_agent(latest_pdf):
-            return False
-        
-        print("\n🎉 전체 워크플로우 완료!")
-        return True
+        while True:
+            try:
+                print("\n선택 방법:")
+                print("- 단일 선택: 1, 2, 3 중 하나 입력")
+                print("- 다중 선택: 1,2 또는 1 2 형태로 입력")
+                print("- 예시: 1,2 (퀴즈 생성 + TTS 팟캐스트 제작)")
+                
+                choice_input = input("\n작업을 선택하세요: ").strip()
+                
+                if not choice_input:
+                    print("❌ 선택을 입력해주세요.")
+                    continue
+                
+                # 선택 파싱
+                choices = []
+                if ',' in choice_input:
+                    choices = [c.strip() for c in choice_input.split(',')]
+                elif ' ' in choice_input:
+                    choices = [c.strip() for c in choice_input.split()]
+                else:
+                    choices = [choice_input.strip()]
+                
+                # 유효성 검사
+                valid_choices = []
+                for choice in choices:
+                    if choice in ['1', '2', '3']:
+                        valid_choices.append(choice)
+                    else:
+                        print(f"❌ 잘못된 선택: {choice}")
+                
+                if not valid_choices:
+                    print("❌ 유효한 선택이 없습니다.")
+                    continue
+                
+                # 중복 제거
+                valid_choices = list(set(valid_choices))
+                
+                # 작업 실행
+                success_count = 0
+                total_tasks = len(valid_choices)
+                
+                if '3' in valid_choices:
+                    print("\n✅ PDF 다운로드만 완료되었습니다.")
+                    return True
+                
+                if '1' in valid_choices:
+                    print("\n🎓 퀴즈 생성을 시작합니다...")
+                    if self.run_quiz_only(latest_pdf):
+                        print("✅ 퀴즈 생성 완료!")
+                        success_count += 1
+                    else:
+                        print("❌ 퀴즈 생성 실패!")
+                
+                if '2' in valid_choices:
+                    print("\n🎧 TTS 팟캐스트 제작을 시작합니다...")
+                    if self.run_tts_only(latest_pdf):
+                        print("✅ TTS 팟캐스트 제작 완료!")
+                        success_count += 1
+                    else:
+                        print("❌ TTS 팟캐스트 제작 실패!")
+                
+                if success_count == total_tasks:
+                    print(f"\n🎉 모든 작업 완료! ({success_count}/{total_tasks})")
+                else:
+                    print(f"\n⚠️ 일부 작업 완료 ({success_count}/{total_tasks})")
+                
+                return True
+                    
+            except KeyboardInterrupt:
+                print("\n프로그램을 종료합니다.")
+                return False
+            except Exception as e:
+                print(f"❌ 오류가 발생했습니다: {e}")
+                return False
     
     def run_manual_workflow(self) -> bool:
         """수동으로 각 단계를 선택하여 실행합니다."""
@@ -172,55 +331,48 @@ class MainAgentController:
             print("="*80)
             print("\n사용 가능한 작업:")
             print("1. 논문 검색 및 PDF 다운로드 (AXPress Scholar Agent)")
-            print("2. PDF 분석 및 퀴즈 생성 (Quiz TTS Agent)")
-            print("3. 자동 워크플로우 (1번 + 2번 연속 실행)")
-            print("4. 종료")
+            print("2. 퀴즈 생성")
+            print("3. TTS 팟캐스트 제작")
+            print("4. 자동 워크플로우 (1번 + 선택된 작업 연속 실행)")
+            print("5. 종료")
             print("="*80)
             
             try:
-                choice = input("\n작업을 선택하세요 (1-4): ").strip()
+                choice = input("\n작업을 선택하세요 (1-5): ").strip()
                 
                 if choice == "1":
                     self.run_scholar_agent()
                 elif choice == "2":
-                    # 다운로드된 PDF 파일 목록 표시
+                    # 퀴즈 생성
                     pdf_files = self.find_downloaded_papers()
                     if not pdf_files:
                         print("❌ downloaded_papers 폴더에 PDF 파일이 없습니다.")
                         print("   먼저 1번 작업으로 논문을 다운로드해주세요.")
                         continue
                     
-                    print(f"\n📁 다운로드된 PDF 파일 ({len(pdf_files)}개):")
-                    for i, pdf_file in enumerate(pdf_files, 1):
-                        filename = os.path.basename(pdf_file)
-                        print(f"   {i}. {filename}")
-                    
-                    if len(pdf_files) == 1:
-                        selected_pdf = pdf_files[0]
-                        print(f"\n📄 자동 선택: {os.path.basename(selected_pdf)}")
-                    else:
-                        while True:
-                            try:
-                                pdf_choice = input(f"\n분석할 PDF 파일을 선택하세요 (1-{len(pdf_files)}): ").strip()
-                                pdf_choice_idx = int(pdf_choice) - 1
-                                
-                                if 0 <= pdf_choice_idx < len(pdf_files):
-                                    selected_pdf = pdf_files[pdf_choice_idx]
-                                    break
-                                else:
-                                    print("❌ 잘못된 번호입니다. 다시 입력해주세요.")
-                            except ValueError:
-                                print("❌ 숫자를 입력해주세요.")
-                    
-                    self.run_quiz_agent(selected_pdf)
+                    selected_pdf = self.select_pdf_file(pdf_files)
+                    if selected_pdf:
+                        self.run_quiz_only(selected_pdf)
                     
                 elif choice == "3":
-                    self.run_automatic_workflow()
+                    # TTS 팟캐스트 제작
+                    pdf_files = self.find_downloaded_papers()
+                    if not pdf_files:
+                        print("❌ downloaded_papers 폴더에 PDF 파일이 없습니다.")
+                        print("   먼저 1번 작업으로 논문을 다운로드해주세요.")
+                        continue
+                    
+                    selected_pdf = self.select_pdf_file(pdf_files)
+                    if selected_pdf:
+                        self.run_tts_only(selected_pdf)
+                    
                 elif choice == "4":
+                    self.run_automatic_workflow()
+                elif choice == "5":
                     print("\n👋 프로그램을 종료합니다.")
                     break
                 else:
-                    print("❌ 잘못된 선택입니다. 1-4 중에서 선택해주세요.")
+                    print("❌ 잘못된 선택입니다. 1-5 중에서 선택해주세요.")
                     
             except KeyboardInterrupt:
                 print("\n\n👋 프로그램을 종료합니다.")
