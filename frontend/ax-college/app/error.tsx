@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 import { PageLayout } from "@/components/Layout/PageLayout"
-import { EmptyState } from "@/components/UI/EmptyState"
+import { EmptyState } from "@/components/ui/EmptyState"
 
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {

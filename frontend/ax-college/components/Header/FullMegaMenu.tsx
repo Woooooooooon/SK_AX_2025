@@ -28,8 +28,8 @@ export function FullMegaMenu({ isOpen, onMouseEnter, onMouseLeave, onClose }: Fu
     <motion.div
       role="region"
       aria-label="주요 메뉴"
-      initial={{ height: 0, opacity: 0, y: -8 }}
-      animate={isOpen ? { height: "auto", opacity: 1, y: 0 } : { height: 0, opacity: 0, y: -8 }}
+      initial={{ height: 0, opacity: 0, y: -20 }}
+      animate={isOpen ? { height: "auto", opacity: 1, y: 0 } : { height: 0, opacity: 0, y: -20 }}
       transition={{ duration: 0.18, ease: "easeOut" }}
       className="fixed left-0 right-0 top-[var(--header-height)] z-40 bg-white/95 backdrop-blur-md border-b border-[var(--ax-border)] shadow-sm overflow-hidden"
       onMouseEnter={onMouseEnter}
@@ -39,7 +39,13 @@ export function FullMegaMenu({ isOpen, onMouseEnter, onMouseLeave, onClose }: Fu
       <div className="mx-auto max-w-5xl px-3 py-6 md:px-4 lg:px-6">
         <div className="flex flex-nowrap gap-4 overflow-x-auto justify-center">
           {NAV_DATA.map((section) => (
-            <div key={section.key} className="space-y-2 flex-none px-2 md:px-2">              
+            <div
+              key={section.key}
+              className={cn(
+                "space-y-2 flex-none px-2 md:px-2 transition-opacity",
+                section.key !== "axpress" && "opacity-30"
+              )}
+            >
               {section.children && (
                 <ul className="space-y-4">
                   {section.children.map((item) => (
@@ -59,7 +65,7 @@ export function FullMegaMenu({ isOpen, onMouseEnter, onMouseLeave, onClose }: Fu
                 </ul>
               )}
             </div>
-          ))}          
+          ))}
         </div>
       </div>
     </motion.div>

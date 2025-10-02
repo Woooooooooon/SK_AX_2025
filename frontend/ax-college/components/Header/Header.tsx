@@ -8,7 +8,6 @@ import { NAV_DATA, type NavItem } from "@/types/navigation"
 import { MegaMenu } from "./MegaMenu"
 import { FullMegaMenu } from "./FullMegaMenu"
 import { MobileMenu } from "./MobileMenu"
-import { UserMenu } from "./UserMenu"
 import { useAXToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 
@@ -127,7 +126,7 @@ export function Header() {
               return (
                 <div
                   key={item.key}
-                  className="relative"
+                  className={cn("relative transition-opacity", item.key !== "axpress" && "opacity-30")}
                   onMouseEnter={() => item.children && handleMenuHover(item.key)}
                   onMouseLeave={handleMenuLeave}
                 >
@@ -161,36 +160,9 @@ export function Header() {
           </div>
 
           {/* Utility Icons and User Menu */}
-          <div className="flex items-center-[ml-5] space-x-2 md:space-x-3">
-            <button
-              type="button"
-              className="ax-focus-ring rounded-lg p-3 text-[var(--ax-fg)] transition-colors hover:bg-[var(--ax-border)]"
-              onClick={() => showPreparingToast("검색 기능")}
-              aria-label="검색"
-            >
-              <Search className="h-4 w-4 md:h-5 md:w-5" />
-            </button>
-
-            <button
-              type="button"
-              className="ax-focus-ring rounded-lg p-3 text-[var(--ax-fg)] transition-colors hover:bg-[var(--ax-border)] lg:hidden"
-              onClick={() => setIsMobileMenuOpen(true)}
-              aria-label="메뉴"
-            >
-              <Menu className="h-4 w-4 md:h-5 md:w-5" />
-            </button>
-
-            <button
-              type="button"
-              className="ax-focus-ring ax-helpdesk-icon rounded-lg p-3 transition-colors hover:bg-[var(--ax-border)]"
-              onClick={() => showPreparingToast("Help Desk")}
-              aria-label="Help Desk"
-            >
-              <HelpCircle className="h-3 w-3 md:h-4 md:w-4" />
-            </button>
-
+          <div className="flex items-center-[ml-5] space-x-2 md:space-x-3">          
             {/* UserMenu component for authentication */}
-            <UserMenu />
+            
           </div>
         </nav>
       </header>
