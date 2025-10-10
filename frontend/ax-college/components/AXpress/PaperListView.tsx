@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { Calendar, User, Sparkles, ExternalLink } from "lucide-react"
-import type { PaperWithDomain } from "@/services/axpress-data"
+import type { PaperWithDomain } from "@/app/axpress/api"
 import { usePaper } from "@/contexts/PaperContext"
 
 interface PaperListViewProps {

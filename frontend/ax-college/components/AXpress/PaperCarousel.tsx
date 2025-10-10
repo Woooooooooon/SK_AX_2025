@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { ChevronLeft, ChevronRight, FileText, Calendar, User, ExternalLink, Sparkles } from "lucide-react"
-import type { PaperWithDomain } from "@/services/axpress-data"
+import type { PaperWithDomain } from "@/app/axpress/api"
 import { usePaper } from "@/contexts/PaperContext"
 
 interface PaperCarouselProps {
@@ -23,6 +23,15 @@ export function PaperCarousel({ papers, onPaperSelect }: PaperCarouselProps) {
   })
   const [isLeftHovered, setIsLeftHovered] = useState(false)
   const [isRightHovered, setIsRightHovered] = useState(false)
+
+  // 빈 배열 처리
+  if (!papers || papers.length === 0) {
+    return (
+      <div className="max-w-5xl mx-auto text-center py-20">
+        <p className="text-[var(--ax-fg)]/50 text-lg">논문 데이터를 불러오는 중입니다...</p>
+      </div>
+    )
+  }
 
   const handlePrev = () => {
     setCurrentIndex((prev) => (prev - 1 + papers.length) % papers.length)

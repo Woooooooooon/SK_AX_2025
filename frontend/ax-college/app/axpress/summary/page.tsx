@@ -1,21 +1,67 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 import { Header } from "@/components/Header/Header"
 import { SelectedPaperBadge } from "@/components/AXpress/SelectedPaperBadge"
 import { PaperProtectedRoute } from "@/components/AXpress/PaperProtectedRoute"
 import { NextPageButton } from "@/components/AXpress/NextPageButton"
 import { MissionNav } from "@/components/AXpress/MissionNav"
+import { LoadingState } from "@/components/ui/LoadingState"
 import { usePaper } from "@/contexts/PaperContext"
+import { downloadPaperFile, getSummary, type SummaryResponse } from "@/app/axpress/api"
 
 export default function SummaryPage() {
   const { selectedPaper, markStepComplete } = usePaper()
+  const [isDownloading, setIsDownloading] = useState(false)
+  const [summaryData, setSummaryData] = useState<SummaryResponse | null>(null)
+  const [isLoadingSummary, setIsLoadingSummary] = useState(false)
+  const [summaryError, setSummaryError] = useState<string | null>(null)
 
   // 페이지 방문 시 자동 완료 처리
   useEffect(() => {
     markStepComplete("summary")
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // AI 요약 로드
+  useEffect(() => {
+    if (!selectedPaper?.title) return
+
+    const loadSummary = async () => {
+      setIsLoadingSummary(true)
+      setSummaryError(null)
+      try {
+        const data = await getSummary(selectedPaper.title)
+        setSummaryData(data)
+      } catch (error) {
+        console.error("AI 요약 로드 실패:", error)
+        setSummaryError(error instanceof Error ? error.message : "AI 요약을 불러오는데 실패했습니다.")
+      } finally {
+        setIsLoadingSummary(false)
+      }
+    }
+
+    loadSummary()
+  }, [selectedPaper?.title])
+
+  const handleDownload = async () => {
+    if (!selectedPaper?.title) {
+      alert("논문 정보를 찾을 수 없습니다.")
+      return
+    }
+
+    setIsDownloading(true)
+    try {
+      await downloadPaperFile(selectedPaper.title)
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "논문 다운로드에 실패했습니다.")
+      console.error(error)
+    } finally {
+      setIsDownloading(false)
+    }
+  }
 
   return (
     <PaperProtectedRoute>
@@ -56,27 +102,40 @@ export default function SummaryPage() {
                     <dd className="text-[var(--ax-fg)]">{selectedPaper?.publishedAt}</dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-[var(--ax-fg)]/60 mb-1">원문 링크</dt>
+                    <dt className="text-sm font-medium text-[var(--ax-fg)]/60 mb-1">원문 다운로드</dt>
                     <dd>
-                      <a
-                        href={selectedPaper?.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[var(--ax-accent)] hover:underline"
+                      <button
+                        onClick={handleDownload}
+                        disabled={isDownloading}
+                        className="text-[var(--ax-accent)] hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        논문 보기 →
-                      </a>
+                        {isDownloading ? "다운로드 중..." : "PDF 다운로드 →"}
+                      </button>
                     </dd>
                   </div>
                 </dl>
               </div>
 
-              {/* AI Summary Section - Placeholder for future implementation */}
+              {/* AI Summary Section */}
               <div className="border-t border-[var(--ax-border)] pt-6">
                 <h2 className="text-xl font-semibold text-[var(--ax-fg)] mb-4">AI 요약</h2>
-                <div className="bg-[var(--ax-bg-soft)] rounded-lg p-6 text-center">
-                  <p className="text-[var(--ax-fg)]/60">AI 요약 기능이 곧 제공됩니다.</p>
-                </div>
+                {isLoadingSummary ? (
+                  <LoadingState message="AI가 논문을 분석하고 있습니다..." />
+                ) : summaryError ? (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                    <p className="text-red-600">{summaryError}</p>
+                  </div>
+                ) : summaryData ? (
+                  <div className="bg-[var(--ax-bg-soft)] rounded-lg p-6">
+                    <article className="prose prose-sm max-w-none prose-headings:text-[var(--ax-fg)] prose-p:text-[var(--ax-fg)]/80 prose-strong:text-[var(--ax-fg)] prose-li:text-[var(--ax-fg)]/80">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{summaryData.summary}</ReactMarkdown>
+                    </article>
+                  </div>
+                ) : (
+                  <div className="bg-[var(--ax-bg-soft)] rounded-lg p-6 text-center">
+                    <p className="text-[var(--ax-fg)]/60">AI 요약을 불러올 수 없습니다.</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

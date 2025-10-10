@@ -1,14 +1,15 @@
 "use client"
 
 import { createContext, useContext, useState, type ReactNode } from "react"
-import type { Paper } from "@/types/axpress"
+import type { PaperWithDomain } from "@/app/axpress/api"
+import { downloadPaperPDF } from "@/app/axpress/api"
 
 type MissionStep = "summary" | "quiz" | "tts" | "history"
 
 interface PaperContextType {
-  selectedPaper: Paper | null
+  selectedPaper: PaperWithDomain | null
   selectedPaperId: string | null
-  selectPaper: (paper: Paper) => void
+  selectPaper: (paper: PaperWithDomain) => void
   clearPaper: () => void
   completedSteps: Set<MissionStep>
   markStepComplete: (step: MissionStep) => void
@@ -18,16 +19,21 @@ interface PaperContextType {
 const PaperContext = createContext<PaperContextType | undefined>(undefined)
 
 export function PaperProvider({ children }: { children: ReactNode }) {
-  const [selectedPaper, setSelectedPaper] = useState<Paper | null>(null)
+  const [selectedPaper, setSelectedPaper] = useState<PaperWithDomain | null>(null)
   const [completedSteps, setCompletedSteps] = useState<Set<MissionStep>>(new Set())
 
-  const selectPaper = (paper: Paper) => {
-    // Generate unique 10-20 digit ID
-    const uniqueId = `${Date.now()}${Math.random().toString(36).substring(2, 15)}`
-    const paperWithId = { ...paper, id: uniqueId }
-    setSelectedPaper(paperWithId)
+  const selectPaper = (paper: PaperWithDomain) => {
+    // API에서 이미 id가 있으므로 그대로 사용
+    setSelectedPaper(paper)
     // 새 논문 선택 시 진행 상황 초기화
     setCompletedSteps(new Set())
+
+    // 논문 선택 시 백그라운드에서 다운로드 API 호출
+    if (paper.pdf_url && paper.arxiv_url && paper.title) {
+      downloadPaperPDF(paper.pdf_url, paper.arxiv_url, paper.title).catch((error) => {
+        console.error("[PaperContext] 논문 다운로드 백그라운드 요청 실패:", error)
+      })
+    }
   }
 
   const clearPaper = () => {

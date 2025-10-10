@@ -36,11 +36,14 @@ export const mockArticles: ArticleCard[] = [
 
 export type PaperDomain = "금융" | "통신" | "제조" | "유통/물류" | "AI" | "클라우드"
 
-export interface PaperWithDomain extends Paper {
+// PaperWithDomain은 이제 /app/axpress/api.ts에 정의되어 있습니다.
+// 아래 mockPapersByDomain은 더 이상 사용되지 않습니다 (API로 대체)
+
+interface LegacyPaperWithDomain extends Paper {
   domain: PaperDomain
 }
 
-export const mockPapersByDomain: Record<PaperDomain, PaperWithDomain[]> = {
+export const mockPapersByDomain: Record<PaperDomain, LegacyPaperWithDomain[]> = {
   금융: [
     {
       id: "",
@@ -385,7 +388,7 @@ export const mockPapersByDomain: Record<PaperDomain, PaperWithDomain[]> = {
   ],
 }
 
-// Legacy export for backward compatibility
+// Legacy export for backward compatibility (더 이상 사용되지 않음)
 export const mockPapers: Paper[] = Object.values(mockPapersByDomain).flat()
 
 export const mockCommunityPosts: CommunityPost[] = [

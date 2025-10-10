@@ -1,13 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Header } from "@/components/Header/Header"
 import { usePaper } from "@/contexts/PaperContext"
-import { mockPapersByDomain, type PaperDomain, type PaperWithDomain } from "@/services/axpress-data"
+import { type PaperDomain } from "@/services/axpress-data"
 import { PaperCarousel } from "@/components/AXpress/PaperCarousel"
 import { PaperListView } from "@/components/AXpress/PaperListView"
 import { SelectedPaperBadge } from "@/components/AXpress/SelectedPaperBadge"
 import { LayoutGrid, List } from "lucide-react"
+import { fetchPapersByDomain, getCachedPapers, type PaperWithDomain } from "./api"
 
 const DOMAINS: PaperDomain[] = ["금융", "통신", "제조", "유통/물류", "AI", "클라우드"]
 
@@ -15,12 +16,43 @@ export default function AXpressPage() {
   const { selectedPaper, selectPaper } = usePaper()
   const [selectedDomain, setSelectedDomain] = useState<PaperDomain>("AI")
   const [viewMode, setViewMode] = useState<"carousel" | "list">("carousel")
+  const [currentPapers, setCurrentPapers] = useState<PaperWithDomain[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // 도메인이 변경될 때마다 논문 데이터 로드
+  useEffect(() => {
+    const loadPapers = async () => {
+      // 캐시 먼저 확인하여 즉시 표시
+      const cachedPapers = getCachedPapers(selectedDomain)
+      if (cachedPapers) {
+        setCurrentPapers(cachedPapers)
+        setIsLoading(false)
+        return
+      }
+
+      // 캐시가 없으면 API 호출
+      setIsLoading(true)
+      setError(null)
+
+      try {
+        const papers = await fetchPapersByDomain(selectedDomain)
+        setCurrentPapers(papers)
+      } catch (err) {
+        console.error("논문 로드 실패:", err)
+        setError("논문을 불러오는데 실패했습니다. 잠시 후 다시 시도해주세요.")
+        setCurrentPapers([])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadPapers()
+  }, [selectedDomain])
 
   const handlePaperSelect = (paper: PaperWithDomain) => {
     selectPaper(paper)
   }
-
-  const currentPapers = mockPapersByDomain[selectedDomain]
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[var(--ax-bg-soft)] to-white">
@@ -89,7 +121,22 @@ export default function AXpressPage() {
 
         {/* Content Area */}
         <div className="mb-12">
-          {viewMode === "carousel" ? (
+          {isLoading ? (
+            <div className="max-w-5xl mx-auto text-center py-20">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--ax-accent)]"></div>
+              <p className="mt-4 text-[var(--ax-fg)]/70">논문을 불러오는 중...</p>
+            </div>
+          ) : error ? (
+            <div className="max-w-5xl mx-auto text-center py-20">
+              <p className="text-red-500 mb-4">{error}</p>
+              <button
+                onClick={() => setSelectedDomain(selectedDomain)}
+                className="px-4 py-2 bg-[var(--ax-accent)] text-white rounded-lg hover:opacity-90 transition-opacity"
+              >
+                다시 시도
+              </button>
+            </div>
+          ) : viewMode === "carousel" ? (
             <div className="max-w-5xl mx-auto">
               <PaperCarousel papers={currentPapers} onPaperSelect={handlePaperSelect} />
             </div>
@@ -98,7 +145,7 @@ export default function AXpressPage() {
               <PaperListView papers={currentPapers} onPaperSelect={handlePaperSelect} />
             </div>
           )}
-        </div>        
+        </div>
       </main>
     </div>
   )
