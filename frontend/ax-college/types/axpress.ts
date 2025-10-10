@@ -28,6 +28,11 @@ export const Paper = z.object({
   source: z.string(),
   publishedAt: z.string(),
   url: z.string().url(),
+  // API 응답 추가 필드 (optional)
+  categories: z.array(z.string()).optional(),
+  citation_count: z.number().optional(),
+  pdf_url: z.string().optional(),
+  arxiv_url: z.string().optional(),
 })
 export type Paper = z.infer<typeof Paper>
 
