@@ -1,5 +1,0 @@
-{
-  "installCommand": "pnpm install --filter=my-v0-project...",
-  "buildCommand": "cd frontend/ax-college && pnpm build",
-  "outputDirectory": "frontend/ax-college/.next"
-}
