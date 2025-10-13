@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(chcp:*)"
-    ],
-    "deny": [],
-    "ask": []
-  }
-}
