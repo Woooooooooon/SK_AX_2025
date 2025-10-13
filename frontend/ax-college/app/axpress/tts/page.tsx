@@ -2,14 +2,14 @@
 
 import { useState, useRef, useEffect } from "react"
 import { Header } from "@/components/Header/Header"
-import { SelectedPaperBadge } from "@/components/AXpress/SelectedPaperBadge"
-import { PaperProtectedRoute } from "@/components/AXpress/PaperProtectedRoute"
-import { NextPageButton } from "@/components/AXpress/NextPageButton"
-import { MissionNav } from "@/components/AXpress/MissionNav"
+import { SelectedPaperBadge } from "@/components/Axpress/SelectedPaperBadge"
+import { PaperProtectedRoute } from "@/components/Axpress/PaperProtectedRoute"
+import { NextPageButton } from "@/components/Axpress/NextPageButton"
+import { MissionNav } from "@/components/Axpress/MissionNav"
 import { LoadingState } from "@/components/ui/LoadingState"
 import { usePaper } from "@/contexts/PaperContext"
 import { Play, Pause, SkipBack, SkipForward, Volume2, Download } from "lucide-react"
-import { generateTTS, getCachedTTS, getTTSStreamURL, downloadTTSAudio } from "../api"
+import { generateTTS, getTTSStreamURL, downloadTTSAudio } from "../api"
 import type { TTSResponse } from "../api"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
@@ -37,22 +37,13 @@ export default function TTSPage() {
   // TTS 데이터 로드
   useEffect(() => {
     const loadTTS = async () => {
-      if (!selectedPaper) return
+      if (!selectedPaper?.research_id) return
 
-      // 캐시 확인
-      const cachedData = getCachedTTS(selectedPaper.title)
-      if (cachedData) {
-        console.log("[TTS Page] 캐시된 TTS 데이터 사용")
-        setTtsData(cachedData)
-        return
-      }
-
-      // API 호출
       setIsLoading(true)
       setError(null)
       try {
         console.log("[TTS Page] TTS 생성 API 호출")
-        const data = await generateTTS(selectedPaper.title)
+        const data = await generateTTS(selectedPaper.research_id)
         setTtsData(data)
       } catch (err) {
         console.error("[TTS Page] TTS 로드 실패:", err)
@@ -63,7 +54,7 @@ export default function TTSPage() {
     }
 
     loadTTS()
-  }, [selectedPaper])
+  }, [selectedPaper?.research_id])
 
   // 오디오 메타데이터 로드 시 duration 설정
   useEffect(() => {

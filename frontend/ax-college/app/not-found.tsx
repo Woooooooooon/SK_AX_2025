@@ -1,5 +1,5 @@
 import { PageLayout } from "@/components/Layout/PageLayout"
-import { EmptyState } from "@/components/UI/EmptyState"
+import { EmptyState } from "@/components/ui/EmptyState"
 
 export default function NotFound() {
   return (

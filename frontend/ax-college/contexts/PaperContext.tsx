@@ -8,7 +8,7 @@ type MissionStep = "summary" | "quiz" | "tts" | "history"
 
 interface PaperContextType {
   selectedPaper: PaperWithDomain | null
-  selectedPaperId: string | null
+  selectedPaperId: number | null
   selectPaper: (paper: PaperWithDomain) => void
   clearPaper: () => void
   completedSteps: Set<MissionStep>
@@ -23,17 +23,15 @@ export function PaperProvider({ children }: { children: ReactNode }) {
   const [completedSteps, setCompletedSteps] = useState<Set<MissionStep>>(new Set())
 
   const selectPaper = (paper: PaperWithDomain) => {
-    // API에서 이미 id가 있으므로 그대로 사용
+    // 논문 선택 및 상태 업데이트
     setSelectedPaper(paper)
     // 새 논문 선택 시 진행 상황 초기화
     setCompletedSteps(new Set())
 
-    // 논문 선택 시 백그라운드에서 다운로드 API 호출
-    if (paper.pdf_url && paper.arxiv_url && paper.title) {
-      downloadPaperPDF(paper.pdf_url, paper.arxiv_url, paper.title).catch((error) => {
-        console.error("[PaperContext] 논문 다운로드 백그라운드 요청 실패:", error)
-      })
-    }
+    // 논문 선택 시 백그라운드에서 S3 다운로드 API 호출
+    downloadPaperPDF(paper.research_id).catch((error) => {
+      console.error("[PaperContext] 논문 다운로드 백그라운드 요청 실패:", error)
+    })
   }
 
   const clearPaper = () => {
@@ -53,7 +51,7 @@ export function PaperProvider({ children }: { children: ReactNode }) {
     <PaperContext.Provider
       value={{
         selectedPaper,
-        selectedPaperId: selectedPaper?.id ?? null,
+        selectedPaperId: selectedPaper?.research_id ?? null,
         selectPaper,
         clearPaper,
         completedSteps,

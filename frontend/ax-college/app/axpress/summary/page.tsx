@@ -4,10 +4,10 @@ import { useEffect, useState } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { Header } from "@/components/Header/Header"
-import { SelectedPaperBadge } from "@/components/AXpress/SelectedPaperBadge"
-import { PaperProtectedRoute } from "@/components/AXpress/PaperProtectedRoute"
-import { NextPageButton } from "@/components/AXpress/NextPageButton"
-import { MissionNav } from "@/components/AXpress/MissionNav"
+import { SelectedPaperBadge } from "@/components/Axpress/SelectedPaperBadge"
+import { PaperProtectedRoute } from "@/components/Axpress/PaperProtectedRoute"
+import { NextPageButton } from "@/components/Axpress/NextPageButton"
+import { MissionNav } from "@/components/Axpress/MissionNav"
 import { LoadingState } from "@/components/ui/LoadingState"
 import { usePaper } from "@/contexts/PaperContext"
 import { downloadPaperFile, getSummary, type SummaryResponse } from "@/app/axpress/api"
@@ -27,37 +27,57 @@ export default function SummaryPage() {
 
   // AI 요약 로드
   useEffect(() => {
-    if (!selectedPaper?.title) return
+    if (!selectedPaper?.research_id) return
+
+    let cancelled = false
 
     const loadSummary = async () => {
       setIsLoadingSummary(true)
       setSummaryError(null)
       try {
-        const data = await getSummary(selectedPaper.title)
-        setSummaryData(data)
+        const data = await getSummary(selectedPaper.research_id)
+        if (!cancelled) {
+          setSummaryData(data)
+        }
       } catch (error) {
-        console.error("AI 요약 로드 실패:", error)
-        setSummaryError(error instanceof Error ? error.message : "AI 요약을 불러오는데 실패했습니다.")
+        if (!cancelled) {
+          console.error("AI 요약 로드 실패:", error)
+          setSummaryError(error instanceof Error ? error.message : "AI 요약을 불러오는데 실패했습니다.")
+        }
       } finally {
-        setIsLoadingSummary(false)
+        if (!cancelled) {
+          setIsLoadingSummary(false)
+        }
       }
     }
 
     loadSummary()
-  }, [selectedPaper?.title])
+
+    return () => {
+      cancelled = true
+    }
+  }, [selectedPaper?.research_id])
 
   const handleDownload = async () => {
-    if (!selectedPaper?.title) {
+    if (!selectedPaper?.research_id) {
       alert("논문 정보를 찾을 수 없습니다.")
       return
     }
 
+    // 이미 다운로드 중이면 중복 실행 방지
+    if (isDownloading) {
+      console.log("[Download] 이미 다운로드 중입니다.")
+      return
+    }
+
+    console.log("[Download] 다운로드 시작:", selectedPaper.research_id)
     setIsDownloading(true)
     try {
-      await downloadPaperFile(selectedPaper.title)
+      await downloadPaperFile(selectedPaper.research_id)
+      console.log("[Download] 다운로드 완료")
     } catch (error) {
+      console.error("[Download] 다운로드 실패:", error)
       alert(error instanceof Error ? error.message : "논문 다운로드에 실패했습니다.")
-      console.error(error)
     } finally {
       setIsDownloading(false)
     }

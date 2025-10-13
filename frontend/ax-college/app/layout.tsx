@@ -1,15 +1,9 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { GeistSans } from "geist/font/sans"
-import { GeistMono } from "geist/font/mono"
-import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
-import { AuthProvider } from "@/hooks/use-auth"
 import { PaperProvider } from "@/contexts/PaperContext"
 import { Toaster } from "@/components/ui/toaster"
 import "./globals.css"
-
-// Using self-hosted Geist fonts; variables are exposed on the objects
 
 export const metadata: Metadata = {
   title: "AX College",
@@ -24,15 +18,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ko" className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}>
+    <html lang="ko" className="antialiased">
       <body className="font-sans">
-        <AuthProvider>
-          <PaperProvider>
-            <Suspense fallback={null}>{children}</Suspense>
-            <Toaster />
-          </PaperProvider>
-        </AuthProvider>
-        <Analytics />
+        <PaperProvider>
+          <Suspense fallback={null}>{children}</Suspense>
+          <Toaster />
+        </PaperProvider>
       </body>
     </html>
   )

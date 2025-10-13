@@ -2,7 +2,6 @@
 
 import type React from "react"
 
-import { motion } from "framer-motion"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { NAV_DATA } from "@/types/navigation"
@@ -24,14 +23,13 @@ export function FullMegaMenu({ isOpen, onMouseEnter, onMouseLeave, onClose }: Fu
     }
   }
 
+  if (!isOpen) return null
+
   return (
-    <motion.div
+    <div
       role="region"
       aria-label="주요 메뉴"
-      initial={{ height: 0, opacity: 0, y: -20 }}
-      animate={isOpen ? { height: "auto", opacity: 1, y: 0 } : { height: 0, opacity: 0, y: -20 }}
-      transition={{ duration: 0.18, ease: "easeOut" }}
-      className="fixed left-0 right-0 top-[var(--header-height)] z-40 bg-white/95 backdrop-blur-md border-b border-[var(--ax-border)] shadow-sm overflow-hidden"
+      className="fixed left-0 right-0 top-[var(--header-height)] z-40 bg-white/95 backdrop-blur-md border-b border-[var(--ax-border)] shadow-sm transition-all duration-200 ease-out"
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onKeyDown={handleKeyDown}
@@ -68,6 +66,6 @@ export function FullMegaMenu({ isOpen, onMouseEnter, onMouseLeave, onClose }: Fu
           ))}
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 }

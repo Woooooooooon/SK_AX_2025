@@ -5,7 +5,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { X, ChevronDown, ChevronRight } from "lucide-react"
 import { NAV_DATA, type NavItem } from "@/types/navigation"
-import { useAuth } from "@/hooks/use-auth"
 import { cn } from "@/lib/utils"
 
 interface MobileMenuProps {
@@ -16,7 +15,6 @@ interface MobileMenuProps {
 export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
   const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set())
   const pathname = usePathname()
-  const { isAuthenticated } = useAuth()
 
   useEffect(() => {
     if (isOpen) {
@@ -78,11 +76,6 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
           <nav className="flex-1 overflow-y-auto p-4">
             <div className="space-y-2">
               {NAV_DATA.map((item) => {
-                // Skip protected routes if not authenticated
-                if (item.protected && !isAuthenticated) {
-                  return null
-                }
-
                 const hasChildren = item.children && item.children.length > 0
                 const isExpanded = expandedMenus.has(item.key)
                 const isActive = isActiveRoute(item)

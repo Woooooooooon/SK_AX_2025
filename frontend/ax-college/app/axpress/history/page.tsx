@@ -2,10 +2,10 @@
 
 import { useEffect } from "react"
 import { Header } from "@/components/Header/Header"
-import { SelectedPaperBadge } from "@/components/AXpress/SelectedPaperBadge"
-import { PaperProtectedRoute } from "@/components/AXpress/PaperProtectedRoute"
+import { SelectedPaperBadge } from "@/components/Axpress/SelectedPaperBadge"
+import { PaperProtectedRoute } from "@/components/Axpress/PaperProtectedRoute"
 import { Calendar, Clock, CheckCircle2, BookOpen, Headphones, Award } from "lucide-react"
-import { MissionNav } from "@/components/AXpress/MissionNav"
+import { MissionNav } from "@/components/Axpress/MissionNav"
 import { usePaper } from "@/contexts/PaperContext"
 
 

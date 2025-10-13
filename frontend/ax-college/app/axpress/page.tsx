@@ -3,12 +3,11 @@
 import { useState, useEffect } from "react"
 import { Header } from "@/components/Header/Header"
 import { usePaper } from "@/contexts/PaperContext"
-import { type PaperDomain } from "@/services/axpress-data"
-import { PaperCarousel } from "@/components/AXpress/PaperCarousel"
-import { PaperListView } from "@/components/AXpress/PaperListView"
-import { SelectedPaperBadge } from "@/components/AXpress/SelectedPaperBadge"
+import { PaperCarousel } from "@/components/Axpress/PaperCarousel"
+import { PaperListView } from "@/components/Axpress/PaperListView"
+import { SelectedPaperBadge } from "@/components/Axpress/SelectedPaperBadge"
 import { LayoutGrid, List } from "lucide-react"
-import { fetchPapersByDomain, getCachedPapers, type PaperWithDomain } from "./api"
+import { fetchPapersByDomain, type PaperWithDomain, type PaperDomain } from "./api"
 
 const DOMAINS: PaperDomain[] = ["금융", "통신", "제조", "유통/물류", "AI", "클라우드"]
 
@@ -23,15 +22,6 @@ export default function AXpressPage() {
   // 도메인이 변경될 때마다 논문 데이터 로드
   useEffect(() => {
     const loadPapers = async () => {
-      // 캐시 먼저 확인하여 즉시 표시
-      const cachedPapers = getCachedPapers(selectedDomain)
-      if (cachedPapers) {
-        setCurrentPapers(cachedPapers)
-        setIsLoading(false)
-        return
-      }
-
-      // 캐시가 없으면 API 호출
       setIsLoading(true)
       setError(null)
 

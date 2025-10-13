@@ -16,7 +16,7 @@ export function PaperCarousel({ papers, onPaperSelect }: PaperCarouselProps) {
   const { selectedPaper } = usePaper()
   const [currentIndex, setCurrentIndex] = useState(() => {
     if (selectedPaper) {
-      const index = papers.findIndex(p => p.title === selectedPaper.title)
+      const index = papers.findIndex(p => p.research_id === selectedPaper.research_id)
       return index !== -1 ? index : 0
     }
     return 0
@@ -50,7 +50,7 @@ export function PaperCarousel({ papers, onPaperSelect }: PaperCarouselProps) {
   const nextPaper = papers[(currentIndex + 1) % papers.length]
 
   const PaperCard = ({ paper, variant = "main", onClick }: { paper: PaperWithDomain; variant?: "prev" | "main" | "next"; onClick?: () => void }) => {
-    const isSelected = selectedPaper?.title === paper.title
+    const isSelected = selectedPaper?.research_id === paper.research_id
     const isPreview = variant !== "main"
 
     return (

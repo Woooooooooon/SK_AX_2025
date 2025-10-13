@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react"
 import { Header } from "@/components/Header/Header"
-import { SelectedPaperBadge } from "@/components/AXpress/SelectedPaperBadge"
-import { PaperProtectedRoute } from "@/components/AXpress/PaperProtectedRoute"
-import { NextPageButton } from "@/components/AXpress/NextPageButton"
-import { MissionNav } from "@/components/AXpress/MissionNav"
+import { SelectedPaperBadge } from "@/components/Axpress/SelectedPaperBadge"
+import { PaperProtectedRoute } from "@/components/Axpress/PaperProtectedRoute"
+import { NextPageButton } from "@/components/Axpress/NextPageButton"
+import { MissionNav } from "@/components/Axpress/MissionNav"
 import { usePaper } from "@/contexts/PaperContext"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { getQuiz, getCachedQuiz, type QuizQuestion } from "../api"
+import { getQuiz, type QuizQuestion } from "../api"
 import { LoadingState } from "@/components/ui/LoadingState"
 
 export default function QuizPage() {
@@ -22,23 +22,14 @@ export default function QuizPage() {
 
   // 퀴즈 데이터 로드
   useEffect(() => {
-    if (!selectedPaper) return
+    if (!selectedPaper?.research_id) return
 
     const loadQuiz = async () => {
       try {
         setLoading(true)
         setError(null)
 
-        // 캐시 확인
-        const cached = getCachedQuiz(selectedPaper.title)
-        if (cached) {
-          setQuizData(cached)
-          setLoading(false)
-          return
-        }
-
-        // API 호출
-        const data = await getQuiz(selectedPaper.title)
+        const data = await getQuiz(selectedPaper.research_id)
         setQuizData(data)
       } catch (err) {
         console.error("퀴즈 로드 실패:", err)
@@ -49,7 +40,7 @@ export default function QuizPage() {
     }
 
     loadQuiz()
-  }, [selectedPaper])
+  }, [selectedPaper?.research_id])
 
   // 페이지 방문 시 자동 완료 처리
   useEffect(() => {
