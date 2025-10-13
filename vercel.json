@@ -1,0 +1,5 @@
+{
+  "installCommand": "pnpm install",
+  "buildCommand": "cd frontend/ax-college && pnpm build",
+  "outputDirectory": "frontend/ax-college/.next"
+}
