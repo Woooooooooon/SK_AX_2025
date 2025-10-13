@@ -73,3 +73,6 @@ yarn-error.log
 *.rej
 *.sublime-workspace
 *.sublime-project
+
+# Claude IDE realated folder
+.claude/
